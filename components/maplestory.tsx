@@ -326,7 +326,7 @@ export function MapleStory() {
   }
 
   return (
-    <div className="m-4 flex flex-row items-start space-x-2">
+    <div className="m-3 flex flex-row items-start space-x-2">
       <div className="flex w-[600px] max-w-full flex-col items-center">
         <CategoryTable
           currentItems={currentItems}
@@ -335,11 +335,15 @@ export function MapleStory() {
         />
       </div>
 
-      <div className="flex flex-col items-center">
-        <Button onClick={handleUpgradeClick}>Randomize</Button>
-        <Draggable>
-          <div className="relative mt-7 flex h-[500px] w-[500px] items-center justify-center">
+      <div className="mt-6 flex flex-col items-center px-10">
+        <Button size="lg" className="text-lg " onClick={handleUpgradeClick}>
+          Randomize
+        </Button>
+
+        <div className="relative mt-8 flex h-[500px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
+          <Draggable>
             <img
+              className="object-contain"
               draggable={false}
               ref={imgRef}
               src={image}
@@ -355,8 +359,8 @@ export function MapleStory() {
                 }
               }}
             />
-          </div>
-        </Draggable>
+          </Draggable>
+        </div>
       </div>
     </div>
   );
@@ -444,11 +448,8 @@ function CategoryTable({
   });
 
   return (
-    <div className="inline-block">
-      <div
-        className="overflow-y-auto rounded-md border"
-        style={{ maxHeight: "calc(100vh - 110px)" }}
-      >
+    <div>
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -472,7 +473,7 @@ function CategoryTable({
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="px-3 py-1">
+                  <TableCell key={cell.id} className="px-3 py-2">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

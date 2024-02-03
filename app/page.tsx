@@ -12,7 +12,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex items-center justify-center">
       {isAuthenticated ? (
         <>
           <p>Subscription Ends On: {convertTimestampToDate(user?.endsOn)}</p>
