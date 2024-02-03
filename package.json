@@ -22,6 +22,7 @@
     "next-themes": "^0.2.1",
     "react": "^18",
     "react-dom": "^18",
+    "react-draggable": "^4.4.6",
     "stripe": "^14.14.0",
     "svix": "^1.16.0",
     "tailwind-merge": "^2.2.1",

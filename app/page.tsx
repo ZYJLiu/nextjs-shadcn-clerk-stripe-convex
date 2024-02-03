@@ -1,6 +1,7 @@
 "use client";
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
+import { MapleStory } from "@/components/maplestory";
 
 export default function Home() {
   const { isAuthenticated } = useConvexAuth();
@@ -18,7 +19,9 @@ export default function Home() {
           <pre>{JSON.stringify(user, null, 2)}</pre>
         </>
       ) : (
-        <p>Sign In</p>
+        <>
+          <MapleStory />
+        </>
       )}
     </div>
   );
