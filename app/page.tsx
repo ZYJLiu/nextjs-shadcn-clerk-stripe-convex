@@ -20,10 +20,10 @@ export default function Home() {
           <pre>{JSON.stringify(user, null, 2)}</pre>
         </>
       ) : (
-        <>
-          <StableDiffusion />
-          {/* <MapleStory /> */}
-        </>
+        <div>
+          <MapleStory />
+          {/* <StableDiffusion /> */}
+        </div>
       )}
     </div>
   );

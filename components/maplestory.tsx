@@ -20,6 +20,7 @@ import {
   TableBody,
   TableHeader,
 } from "@/components/ui/table";
+import { StableDiffusion } from "./stable-diffusion";
 
 interface Item {
   requiredJobs: string[];
@@ -74,6 +75,8 @@ export function MapleStory() {
   const [image, setImage] = useState<string>(
     "https://maplestory.io/api/character/%7B%22itemId%22%3A2000%2C%22region%22%3A%22GMS%22%2C%22version%22%3A%22247%22%7D%2C%7B%22itemId%22%3A12000%2C%22region%22%3A%22GMS%22%2C%22version%22%3A%22247%22%7D/stand1/animated?showears=false&showLefEars=false&name=&flipX=false",
   );
+  const [stableDiffusionInputImage, setStableDiffusionInputImage] =
+    useState("");
 
   const [allItems, setAllItems] = useState<Item[] | null>(null);
   const [currentItems, setCurrentItems] = useState<Record<string, CurrentItem>>(
@@ -218,9 +221,16 @@ export function MapleStory() {
           return acc + (index > 0 ? "," : "") + itemStr;
         }, "");
 
-        const url = `https://maplestory.io/api/character/${params}/${pose}/animated?showears=false&showLefEars=false&name=&flipX=false`;
+        const baseUrl = `https://maplestory.io/api/character/${params}/${pose}`;
+        const queryParams =
+          "showears=false&showLefEars=false&name=&flipX=false";
+
+        const url = `${baseUrl}/animated?${queryParams}`;
+        const stableDiffusionInputImage = `${baseUrl}?${queryParams}`;
+
         console.log("URL: ", url);
         setImage(url);
+        setStableDiffusionInputImage(stableDiffusionInputImage);
       } else {
         console.log("No items to select from.");
       }
@@ -282,10 +292,16 @@ export function MapleStory() {
           .map((item) => encodeURIComponent(JSON.stringify(item)))
           .join(",");
 
-        console.log("Params: ", params);
-        const url = `https://maplestory.io/api/character/${params}/${pose}/animated?showears=false&showLefEars=false&name=&flipX=false`;
+        const baseUrl = `https://maplestory.io/api/character/${params}/${pose}`;
+        const queryParams =
+          "showears=false&showLefEars=false&name=&flipX=false";
+
+        const url = `${baseUrl}/animated?${queryParams}`;
+        const stableDiffusionInputImage = `${baseUrl}?${queryParams}`;
+
         console.log("URL: ", url);
         setImage(url);
+        setStableDiffusionInputImage(stableDiffusionInputImage);
       }
     }
   }
@@ -326,42 +342,44 @@ export function MapleStory() {
   }
 
   return (
-    <div className="m-3 flex flex-row items-start space-x-2">
-      <div className="flex w-[600px] max-w-full flex-col items-center">
-        <CategoryTable
-          currentItems={currentItems}
-          randomizeCategory={randomizeCategory}
-          toggleItemSelection={toggleItemSelection}
-        />
-      </div>
+    <div className="m-3 flex flex-col items-center space-y-2">
+      <div className="flex w-full flex-row items-start justify-center space-x-2">
+        <div className="flex w-[600px] max-w-full flex-col items-center">
+          <CategoryTable
+            currentItems={currentItems}
+            randomizeCategory={randomizeCategory}
+            toggleItemSelection={toggleItemSelection}
+          />
+        </div>
 
-      <div className="mt-6 flex flex-col items-center px-10">
-        <Button size="lg" className="text-lg " onClick={handleUpgradeClick}>
-          Randomize
-        </Button>
+        <div className="mt-6 flex flex-col items-center px-10">
+          <Button onClick={handleUpgradeClick}>Randomize</Button>
 
-        <div className="relative mt-8 flex h-[700px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
-          <Draggable>
-            <img
-              className="object-contain"
-              draggable={false}
-              ref={imgRef}
-              src={image}
-              alt="Maple Story"
-              width={imgSize.width * 3}
-              height={imgSize.height * 3}
-              onLoad={() => {
-                if (imgRef.current) {
-                  setImgSize({
-                    width: imgRef.current.naturalWidth,
-                    height: imgRef.current.naturalHeight,
-                  });
-                }
-              }}
-            />
-          </Draggable>
+          <div className="relative mt-8 flex h-[700px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
+            <Draggable>
+              <img
+                className="object-contain"
+                draggable={false}
+                ref={imgRef}
+                src={image}
+                alt="Maple Story"
+                width={imgSize.width * 3}
+                height={imgSize.height * 3}
+                onLoad={() => {
+                  if (imgRef.current) {
+                    setImgSize({
+                      width: imgRef.current.naturalWidth,
+                      height: imgRef.current.naturalHeight,
+                    });
+                  }
+                }}
+              />
+            </Draggable>
+          </div>
         </div>
       </div>
+
+      <StableDiffusion imageSrc={stableDiffusionInputImage} />
     </div>
   );
 }

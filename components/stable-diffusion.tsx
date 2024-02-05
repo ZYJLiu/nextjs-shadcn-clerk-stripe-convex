@@ -1,18 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-export function StableDiffusion() {
+export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
   const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
-    // const imageSrc =
-    //   "https://maplestory.io/api/character/%7B%22itemId%22%3A2000%2C%22region%22%3A%22KMS%22%2C%22version%22%3A%22359%22%7D%2C%7B%22itemId%22%3A12000%2C%22region%22%3A%22KMS%22%2C%22version%22%3A%22359%22%7D%2C%7B%22itemId%22%3A20030%2C%22animationName%22%3A%22default%22%2C%22region%22%3A%22KMS%22%2C%22version%22%3A%22359%22%7D/stand1/0?showears=false&showLefEars=false&resize=1&name=&flipX=false";
-
-    const imageSrc =
-      "https://maplestory.io/api/GMS/216/mob/100100/render/stand/1";
-
+    setIsLoading(true);
     try {
       const imageFile = await convertUrlToResizedFile(imageSrc);
 
@@ -30,18 +27,28 @@ export function StableDiffusion() {
       setImages(imageData);
     } catch (error) {
       console.error("Failed to fetch image:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      <Button variant="outline" onClick={handleClick}>
-        Stable Diffusion
+    <div className="flex flex-col items-center">
+      <Button
+        disabled={isLoading}
+        onClick={!isLoading ? handleClick : undefined}
+        className="mb-3 mt-3 flex w-40 max-w-xs items-center justify-center"
+      >
+        {isLoading ? (
+          <Loader2 className="h-6 w-6 animate-spin" />
+        ) : (
+          "Stable Diffusion"
+        )}
       </Button>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {images.map((imgBase64, index) => (
-          <div key={index} className="h-[400px] w-[400px]">
+          <div key={index} className="h-[400px] w-full">
             <img
               alt={`img-${index}`}
               className="h-full w-full object-cover" // Adjusted to fill the container
@@ -55,29 +62,52 @@ export function StableDiffusion() {
 }
 
 async function convertUrlToResizedFile(
-  imageUrl,
-  targetWidth = 1024,
-  targetHeight = 1024,
-) {
+  imageUrl: string,
+  targetWidth: number = 1024,
+  targetHeight: number = 1024,
+): Promise<File> {
   const response = await fetch(imageUrl);
   const blob = await response.blob();
 
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
+      // Calculate the scale to maintain aspect ratio
+      const scale = Math.min(
+        targetWidth / img.width,
+        targetHeight / img.height,
+      );
+
+      // Calculate the new dimensions
+      const scaledWidth = img.width * scale;
+      const scaledHeight = img.height * scale;
+
+      // Calculate the position to center the image
+      const offsetX = (targetWidth - scaledWidth) / 2;
+      const offsetY = (targetHeight - scaledHeight) / 2;
+
+      // Create canvas with target dimensions
       const canvas = document.createElement("canvas");
       canvas.width = targetWidth;
       canvas.height = targetHeight;
 
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      const ctx = canvas.getContext("2d")!;
+
+      // Fill canvas with a background
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+      // Draw the image centered on the canvas
+      ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
 
       canvas.toBlob((resizedBlob) => {
         if (resizedBlob) {
-          const filename = imageUrl.split("/").pop(); // Extract a filename from the URL
-          const resizedFile = new File([resizedBlob], filename, {
+          const filename = imageUrl.split("/").pop();
+          const resizedFile = new File([resizedBlob], filename!, {
             type: resizedBlob.type,
           });
+
+          console.log("Resized file:", resizedFile);
           resolve(resizedFile);
         } else {
           reject(new Error("Failed to resize image"));
@@ -88,38 +118,3 @@ async function convertUrlToResizedFile(
     img.src = URL.createObjectURL(blob);
   });
 }
-
-// async function convertUrlToFile(imageUrl) {
-//   const response = await fetch(imageUrl);
-//   const blob = await response.blob();
-//   const filename = imageUrl.split("/").pop(); // Extract a filename from the URL
-//   return new File([blob], filename, { type: blob.type });
-// }
-
-// async function convertImageToBase64(
-//   imageUrl,
-//   targetWidth = 1024,
-//   targetHeight = 1024,
-// ) {
-//   const response = await fetch(imageUrl);
-//   const blob = await response.blob();
-
-//   return new Promise((resolve, reject) => {
-//     const img = new Image();
-//     img.onload = () => {
-//       // Create a canvas with the desired dimensions
-//       const canvas = document.createElement("canvas");
-//       canvas.width = targetWidth;
-//       canvas.height = targetHeight;
-
-//       // Draw the image onto the canvas, resizing it
-//       const ctx = canvas.getContext("2d");
-//       ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-
-//       // Convert the canvas to a base64 string
-//       resolve(canvas.toDataURL());
-//     };
-//     img.onerror = reject;
-//     img.src = URL.createObjectURL(blob);
-//   });
-// }
