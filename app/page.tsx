@@ -2,6 +2,7 @@
 import { api } from "@/convex/_generated/api";
 import { useConvexAuth, useQuery } from "convex/react";
 import { MapleStory } from "@/components/maplestory";
+import { StableDiffusion } from "@/components/stable-diffusion";
 
 export default function Home() {
   const { isAuthenticated } = useConvexAuth();
@@ -20,7 +21,8 @@ export default function Home() {
         </>
       ) : (
         <>
-          <MapleStory />
+          <StableDiffusion />
+          {/* <MapleStory /> */}
         </>
       )}
     </div>

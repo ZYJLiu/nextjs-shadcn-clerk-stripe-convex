@@ -67,7 +67,7 @@ const character = {
 };
 const data = {
   region: "GMS",
-  version: "231",
+  version: "247",
 };
 
 export function MapleStory() {
@@ -340,7 +340,7 @@ export function MapleStory() {
           Randomize
         </Button>
 
-        <div className="relative mt-8 flex h-[500px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
+        <div className="relative mt-8 flex h-[700px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
           <Draggable>
             <img
               className="object-contain"
