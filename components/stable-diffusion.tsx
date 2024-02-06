@@ -1,12 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useConvexAuth } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
-
+import { image } from "@/lib/image";
 export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
-  const [images, setImages] = useState([]);
+  const { isAuthenticated } = useConvexAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState([image]);
 
   const handleClick = async () => {
     setIsLoading(true);
@@ -22,7 +24,7 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
       });
 
       const { imageData } = await response.json();
-      console.log(imageData[0]);
+      console.log(imageData);
 
       setImages(imageData);
     } catch (error) {
@@ -35,8 +37,8 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
   return (
     <div className="flex flex-col items-center">
       <Button
-        disabled={isLoading}
-        onClick={!isLoading ? handleClick : undefined}
+        disabled={!isAuthenticated || isLoading}
+        onClick={handleClick}
         className="mb-3 mt-3 flex w-40 max-w-xs items-center justify-center"
       >
         {isLoading ? (
@@ -46,12 +48,18 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
         )}
       </Button>
 
-      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+      <div
+        className={`${
+          images.length <= 5
+            ? "flex flex-wrap items-start justify-center"
+            : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5"
+        }`}
+      >
         {images.map((imgBase64, index) => (
-          <div key={index} className="h-[400px] w-full">
+          <div key={index} className="h-[400px] w-full md:w-auto">
             <img
               alt={`img-${index}`}
-              className="h-full w-full object-cover" // Adjusted to fill the container
+              className="h-full w-full object-cover"
               src={imgBase64}
             />
           </div>

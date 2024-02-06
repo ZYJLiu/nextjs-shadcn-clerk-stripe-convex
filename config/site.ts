@@ -5,10 +5,14 @@ export const siteConfig = {
   description:
     "Beautifully designed components built with Radix UI and Tailwind CSS.",
   mainNav: [
-    // {
-    //   title: "Home",
-    //   href: "/",
-    // },
+    {
+      title: "Home",
+      href: "/",
+    },
+    {
+      title: "Images",
+      href: "/images",
+    },
   ],
   links: {
     twitter: "/",

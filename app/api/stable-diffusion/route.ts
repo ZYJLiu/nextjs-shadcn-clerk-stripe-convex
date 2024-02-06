@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { api } from "@/convex/_generated/api";
+import { fetchAction } from "convex/nextjs";
+import { auth } from "@clerk/nextjs";
+
+// Clerk auth token for server-side requests
+export async function getAuthToken() {
+  return (await auth().getToken({ template: "convex" })) ?? undefined;
+}
 
 interface GenerationResponse {
   artifacts: Array<{
@@ -16,7 +24,7 @@ export async function POST(req: NextRequest) {
   formData.append("init_image", file);
   formData.append("init_image_mode", "IMAGE_STRENGTH");
   formData.append("image_strength", "0.25");
-  formData.append("steps", "40");
+  formData.append("steps", "50");
   // formData.append("width", "1024");
   // formData.append("height", "1024");
   formData.append("seed", "0");
@@ -25,7 +33,7 @@ export async function POST(req: NextRequest) {
   // formData.append("style_preset", "anime");
   formData.append(
     "text_prompts[0][text]",
-    "maplestory hero, chibi, golden ratio",
+    "golden ratio, maplestory hero, chibi",
   );
   formData.append("text_prompts[0][weight]", "1");
   formData.append("text_prompts[1][text]", "blurry, bad");
@@ -48,6 +56,12 @@ export async function POST(req: NextRequest) {
   const images = responseJSON.artifacts.map(
     (artifact) => `data:image/jpeg;base64,${artifact.base64}`,
   );
+
+  // Store images in the convex storage
+  const token = await getAuthToken();
+  images.forEach((image) => {
+    fetchAction(api.images.storeImage, { base64Image: image }, { token });
+  });
 
   return new NextResponse(JSON.stringify({ imageData: images }), {
     status: 200,

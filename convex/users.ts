@@ -1,5 +1,11 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import {
+  ActionCtx,
+  QueryCtx,
+  internalMutation,
+  internalQuery,
+  query,
+} from "./_generated/server";
 
 const FREE_CREDITS = 5;
 
@@ -118,3 +124,20 @@ export const updateSubscriptionBySubId = internalMutation({
     });
   },
 });
+
+export const getUserById = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .unique();
+  },
+});
+
+// export async function getUserById(ctx: QueryCtx, userId: string) {
+//   return await ctx.db
+//     .query("users")
+//     .withIndex("by_userId", (q) => q.eq("userId", userId))
+//     .unique();
+// }

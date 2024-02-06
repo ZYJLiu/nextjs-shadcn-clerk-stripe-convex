@@ -14,14 +14,15 @@ export default function Home() {
 
   return (
     <div className="flex items-center justify-center">
+      <MapleStory />
       {isAuthenticated ? (
         <>
-          <p>Subscription Ends On: {convertTimestampToDate(user?.endsOn)}</p>
-          <pre>{JSON.stringify(user, null, 2)}</pre>
+          {/* <p>Subscription Ends On: {convertTimestampToDate(user?.endsOn)}</p> */}
+          {/* <pre>{JSON.stringify(user, null, 2)}</pre> */}
         </>
       ) : (
         <div>
-          <MapleStory />
+          {/* <MapleStory /> */}
           {/* <StableDiffusion /> */}
         </div>
       )}
