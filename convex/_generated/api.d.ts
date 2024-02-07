@@ -17,6 +17,7 @@ import type {
 import type * as clerk from "../clerk.js";
 import type * as http from "../http.js";
 import type * as images from "../images.js";
+import type * as stablediffusion from "../stablediffusion.js";
 import type * as stripe from "../stripe.js";
 import type * as users from "../users.js";
 
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   clerk: typeof clerk;
   http: typeof http;
   images: typeof images;
+  stablediffusion: typeof stablediffusion;
   stripe: typeof stripe;
   users: typeof users;
 }>;

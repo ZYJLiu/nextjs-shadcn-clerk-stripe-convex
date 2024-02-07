@@ -24,12 +24,12 @@ export async function POST(req: NextRequest) {
   formData.append("init_image", file);
   formData.append("init_image_mode", "IMAGE_STRENGTH");
   formData.append("image_strength", "0.25");
-  formData.append("steps", "50");
+  formData.append("steps", "40");
   // formData.append("width", "1024");
   // formData.append("height", "1024");
   formData.append("seed", "0");
   formData.append("cfg_scale", "20");
-  formData.append("samples", "10");
+  formData.append("samples", "1");
   // formData.append("style_preset", "anime");
   formData.append(
     "text_prompts[0][text]",

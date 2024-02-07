@@ -1,5 +1,11 @@
 import { v } from "convex/values";
-import { action, internalMutation, query } from "./_generated/server";
+import {
+  ActionCtx,
+  MutationCtx,
+  action,
+  internalMutation,
+  query,
+} from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 
@@ -72,7 +78,7 @@ export const getImages = query({
   },
 });
 
-function base64ToBlob(base64: string) {
+export function base64ToBlob(base64: string) {
   // Decode Base64 string
   const binary = atob(base64.split(",")[1]);
 

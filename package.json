@@ -29,6 +29,7 @@
     "react-dom": "^18",
     "react-draggable": "^4.4.6",
     "react-hook-form": "^7.50.0",
+    "sharp": "^0.33.2",
     "stripe": "^14.14.0",
     "svix": "^1.16.0",
     "tailwind-merge": "^2.2.1",

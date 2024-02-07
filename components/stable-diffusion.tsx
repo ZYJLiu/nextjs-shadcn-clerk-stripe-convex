@@ -5,7 +5,12 @@ import { useConvexAuth } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { image } from "@/lib/image";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
 export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
+  const generateImage = useAction(api.stablediffusion.generateImage);
+
   const { isAuthenticated } = useConvexAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState([image]);
@@ -15,18 +20,39 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
     try {
       const imageFile = await convertUrlToResizedFile(imageSrc);
 
-      const formData = new FormData();
-      formData.append("file", imageFile);
+      const arrayBuffer = await convertBlobToArrayBuffer(imageFile);
+      console.log("Array buffer:", arrayBuffer);
+      const base64 = (await getBase64(imageFile)) as string;
+      console.log("Base64:", base64);
 
-      const response = await fetch("/api/stable-diffusion", {
-        method: "POST",
-        body: formData,
-      });
+      const images = await generateImage({ base64Image: base64 });
+      console.log("Images:", images);
+      setImages(images);
 
-      const { imageData } = await response.json();
-      console.log(imageData);
+      // const formData = new FormData();
+      // formData.append("file", imageFile);
 
-      setImages(imageData);
+      // const response = await fetch("/api/stable-diffusion", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // const { imageData } = await response.json();
+      // console.log(imageData);
+
+      // setImages(imageData);
+
+      // DELETE THIS BELOW
+      // const response = await fetch(
+      //   `${process.env.NEXT_PUBLIC_CONVEX_SITE}/stablediffusion`,
+      //   {
+      //     method: "POST",
+      //     body: imageFile,
+      //   },
+      // );
+      // console.log(response);
+      // const { data } = await response.json();
+      // console.log(data);
     } catch (error) {
       console.error("Failed to fetch image:", error);
     } finally {
@@ -39,7 +65,7 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
       <Button
         disabled={!isAuthenticated || isLoading}
         onClick={handleClick}
-        className="mb-3 mt-3 flex w-40 max-w-xs items-center justify-center"
+        className="mb-2 mt-2 flex w-40 max-w-xs items-center justify-center"
       >
         {isLoading ? (
           <Loader2 className="h-6 w-6 animate-spin" />
@@ -56,7 +82,10 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
         }`}
       >
         {images.map((imgBase64, index) => (
-          <div key={index} className="h-[400px] w-full md:w-auto">
+          <div
+            key={index}
+            className="h-[400px] w-full overflow-hidden rounded-3xl border-2 bg-black md:w-auto"
+          >
             <img
               alt={`img-${index}`}
               className="h-full w-full object-cover"
@@ -124,5 +153,23 @@ async function convertUrlToResizedFile(
     };
     img.onerror = reject;
     img.src = URL.createObjectURL(blob);
+  });
+}
+
+async function convertBlobToArrayBuffer(blob: Blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
+function getBase64(file: File) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+    reader.readAsDataURL(file);
   });
 }

@@ -352,10 +352,10 @@ export function MapleStory() {
           />
         </div>
 
-        <div className="mt-6 flex flex-col items-center px-10">
+        <div className="mt-2 flex flex-col items-center px-10">
           <Button onClick={handleUpgradeClick}>Randomize</Button>
 
-          <div className="relative mt-8 flex h-[700px] w-[600px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black shadow-lg">
+          <div className="relative mt-2 flex h-[400px] w-[400px] items-center justify-center overflow-hidden rounded-3xl border-2 bg-black">
             <Draggable>
               <img
                 className="object-contain"
@@ -377,9 +377,8 @@ export function MapleStory() {
             </Draggable>
           </div>
         </div>
+        <StableDiffusion imageSrc={stableDiffusionInputImage} />
       </div>
-
-      <StableDiffusion imageSrc={stableDiffusionInputImage} />
     </div>
   );
 }
