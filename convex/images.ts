@@ -9,6 +9,7 @@ import {
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+import { paginationOptsValidator } from "convex/server";
 
 export const generateUploadUrl = mutation(async (ctx) => {
   return await ctx.storage.generateUploadUrl();
@@ -33,7 +34,24 @@ export const storeStorageId = mutation({
     }
 
     const { storageId } = args;
-    await ctx.db.insert("images", { storageId, user: user._id });
+    const imageUrl = await ctx.storage.getUrl(storageId);
+
+    await ctx.db.insert("images", {
+      storageId,
+      user: user._id,
+      imageUrl: imageUrl!,
+    });
+  },
+});
+
+export const patchImage = mutation({
+  handler: async (ctx) => {
+    const imageDocs = await ctx.db.query("images").collect();
+
+    for (const imageDoc of imageDocs) {
+      const imageUrl = await ctx.storage.getUrl(imageDoc.storageId);
+      await ctx.db.patch(imageDoc._id, { imageUrl: imageUrl! });
+    }
   },
 });
 
@@ -72,13 +90,14 @@ export const storeResult = internalMutation({
   },
   handler: async (ctx, args) => {
     const { storageId, user } = args;
-    await ctx.db.insert("images", { storageId, user });
+    const imageUrl = await ctx.storage.getUrl(storageId);
+    await ctx.db.insert("images", { storageId, user, imageUrl: imageUrl! });
   },
 });
 
 export const getImages = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("you must be logged in to upload images");
@@ -92,17 +111,28 @@ export const getImages = query({
       throw new Error("user not found");
     }
 
-    const images = await ctx.db
+    const paginationResult = await ctx.db
       .query("images")
       .withIndex("by_user", (q) => q.eq("user", user._id))
-      .collect();
+      .order("desc") // newest first
+      .paginate(args.paginationOpts);
+    //   .collect()
 
-    return Promise.all(
-      images.map(async (image) => ({
-        url: await ctx.storage.getUrl(image.storageId),
-        createdAt: image._creationTime,
-      })),
-    );
+    return paginationResult;
+
+    // const images = (paginationResult as any).items as Array<{
+    //   _id: Id<"images">;
+    //   _creationTime: number;
+    //   user: Id<"users">;
+    //   storageId: Id<"_storage">;
+    // }>;
+
+    // return Promise.all(
+    //   images.map(async (image) => ({
+    //     url: await ctx.storage.getUrl(image.storageId),
+    //     createdAt: image._creationTime,
+    //   })),
+    // );
   },
 });
 
