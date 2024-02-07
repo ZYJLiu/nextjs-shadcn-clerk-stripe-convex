@@ -20,39 +20,27 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
     try {
       const imageFile = await convertUrlToResizedFile(imageSrc);
 
-      const arrayBuffer = await convertBlobToArrayBuffer(imageFile);
-      console.log("Array buffer:", arrayBuffer);
-      const base64 = (await getBase64(imageFile)) as string;
-      console.log("Base64:", base64);
+      const formData = new FormData();
+      formData.append("file", imageFile);
 
-      const images = await generateImage({ base64Image: base64 });
-      console.log("Images:", images);
-      setImages(images);
+      const response = await fetch("/api/stable-diffusion", {
+        method: "POST",
+        body: formData,
+      });
 
-      // const formData = new FormData();
-      // formData.append("file", imageFile);
+      const { imageData } = await response.json();
+      console.log(imageData);
 
-      // const response = await fetch("/api/stable-diffusion", {
-      //   method: "POST",
-      //   body: formData,
-      // });
+      setImages(imageData);
 
-      // const { imageData } = await response.json();
-      // console.log(imageData);
+      // const arrayBuffer = await convertBlobToArrayBuffer(imageFile);
+      // console.log("Array buffer:", arrayBuffer);
+      // const base64 = (await getBase64(imageFile)) as string;
+      // console.log("Base64:", base64);
 
-      // setImages(imageData);
-
-      // DELETE THIS BELOW
-      // const response = await fetch(
-      //   `${process.env.NEXT_PUBLIC_CONVEX_SITE}/stablediffusion`,
-      //   {
-      //     method: "POST",
-      //     body: imageFile,
-      //   },
-      // );
-      // console.log(response);
-      // const { data } = await response.json();
-      // console.log(data);
+      // const images = await generateImage({ base64Image: base64 });
+      // console.log("Images:", images);
+      // setImages(images);
     } catch (error) {
       console.error("Failed to fetch image:", error);
     } finally {

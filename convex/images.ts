@@ -4,10 +4,38 @@ import {
   MutationCtx,
   action,
   internalMutation,
+  mutation,
   query,
 } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
+
+export const generateUploadUrl = mutation(async (ctx) => {
+  return await ctx.storage.generateUploadUrl();
+});
+
+export const storeStorageId = mutation({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("you must be logged in to upload images");
+    }
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("user not found");
+    }
+
+    const { storageId } = args;
+    await ctx.db.insert("images", { storageId, user: user._id });
+  },
+});
 
 export const storeImage = action({
   args: {

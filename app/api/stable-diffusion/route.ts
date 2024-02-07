@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/convex/_generated/api";
-import { fetchAction } from "convex/nextjs";
+import { fetchMutation } from "convex/nextjs";
 import { auth } from "@clerk/nextjs";
 
 // Clerk auth token for server-side requests
@@ -17,6 +17,12 @@ interface GenerationResponse {
 }
 
 export async function POST(req: NextRequest) {
+  const token = await getAuthToken();
+
+  if (!token) {
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
   const requestFormData = await req.formData();
   const { file } = Object.fromEntries(requestFormData.entries());
 
@@ -57,11 +63,10 @@ export async function POST(req: NextRequest) {
     (artifact) => `data:image/jpeg;base64,${artifact.base64}`,
   );
 
-  // Store images in the convex storage
-  const token = await getAuthToken();
-  images.forEach((image) => {
-    fetchAction(api.images.storeImage, { base64Image: image }, { token });
-  });
+  const uploadPromises = images.map((base64Image) =>
+    uploadImage(base64Image, token!),
+  );
+  Promise.all(uploadPromises);
 
   return new NextResponse(JSON.stringify({ imageData: images }), {
     status: 200,
@@ -69,4 +74,37 @@ export async function POST(req: NextRequest) {
       "Content-Type": "application/json",
     },
   });
+}
+
+async function uploadImage(base64Image: string, token: string) {
+  // Convert the base64 image to a blob
+  const blobImage = base64ToBlob(base64Image);
+
+  // Generate convex upload URL
+  const postUrl = await fetchMutation(api.images.generateUploadUrl);
+
+  // Upload the image using the generated URL
+  const result = await fetch(postUrl, {
+    method: "POST",
+    headers: { "Content-Type": "image/jpeg" },
+    body: blobImage,
+  });
+
+  // Extract the convex storageId from the response
+  const { storageId } = await result.json();
+
+  console.log(storageId);
+
+  // Store the storageId, linking it to the logged in user
+  await fetchMutation(api.images.storeStorageId, { storageId }, { token });
+}
+
+function base64ToBlob(base64: string) {
+  const byteCharacters = atob(base64.split(",")[1]);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  return new Blob([byteArray], { type: "image/png" });
 }
