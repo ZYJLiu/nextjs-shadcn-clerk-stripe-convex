@@ -23,7 +23,7 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
       const formData = new FormData();
       formData.append("file", imageFile);
 
-      const response = await fetch("/api/stable-diffusion", {
+      const response = await fetch("/api/image-to-image", {
         method: "POST",
         body: formData,
       });

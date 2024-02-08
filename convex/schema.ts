@@ -16,7 +16,7 @@ export default defineSchema({
     .index("by_subscriptionId", ["subscriptionId"]),
 
   images: defineTable({
-    user: v.id("users"),
+    user: v.optional(v.id("users")),
     storageId: v.id("_storage"),
     imageUrl: v.optional(v.string()),
   }).index("by_user", ["user"]),

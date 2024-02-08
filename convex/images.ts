@@ -116,23 +116,69 @@ export const getImages = query({
       .withIndex("by_user", (q) => q.eq("user", user._id))
       .order("desc") // newest first
       .paginate(args.paginationOpts);
-    //   .collect()
 
     return paginationResult;
+  },
+});
 
-    // const images = (paginationResult as any).items as Array<{
-    //   _id: Id<"images">;
-    //   _creationTime: number;
-    //   user: Id<"users">;
-    //   storageId: Id<"_storage">;
-    // }>;
+export const deleteImages = mutation({
+  args: { ids: v.array(v.id("images")) },
+  handler: async (ctx, args) => {
+    for (const id of args.ids) {
+      const doc = await ctx.db.get(id);
+      if (doc && doc.storageId) {
+        // Delete the associated file
+        await ctx.storage.delete(doc.storageId);
+      }
 
-    // return Promise.all(
-    //   images.map(async (image) => ({
-    //     url: await ctx.storage.getUrl(image.storageId),
-    //     createdAt: image._creationTime,
-    //   })),
-    // );
+      // Delete the image doc from the database
+      await ctx.db.delete(id);
+    }
+  },
+});
+
+export const unlinkUserFromImages = mutation({
+  args: { ids: v.array(v.id("images")) },
+  handler: async (ctx, args) => {
+    for (const id of args.ids) {
+      // Instead of deleting, update the 'user' field to
+      await ctx.db.patch(id, { user: undefined });
+    }
+  },
+});
+
+export const linkUserToImages = mutation({
+  args: { ids: v.array(v.id("images")) },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("you must be logged in to upload images");
+    }
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .unique();
+
+    if (!user) {
+      throw new Error("user not found");
+    }
+
+    for (const id of args.ids) {
+      await ctx.db.patch(id, { user: user._id });
+    }
+  },
+});
+
+export const getUnlinkedImages = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    const paginationResult = await ctx.db
+      .query("images")
+      .withIndex("by_user", (q) => q.eq("user", undefined))
+      .order("desc") // newest first
+      .paginate(args.paginationOpts);
+
+    return paginationResult;
   },
 });
 
