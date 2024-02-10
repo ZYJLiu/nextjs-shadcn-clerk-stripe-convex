@@ -1,26 +1,18 @@
 "use client";
 import { api } from "@/convex/_generated/api";
-import { useMutation } from "convex/react";
 import { usePaginatedQuery } from "convex/react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { Id } from "@/convex/_generated/dataModel";
 
-export default function ImagesPool() {
+export default function Videos() {
   const [selectedImages, setSelectedImages] = useState(new Set());
   const { results, status, loadMore } = usePaginatedQuery(
-    api.images.getUnlinkedImages,
+    api.videos.getVideos,
     {},
     { initialNumItems: 10 },
   );
 
-  const linkUserToImages = useMutation(api.images.linkUserToImages);
-
-  function handleUnlinkUserFromImages() {
-    linkUserToImages({ ids: Array.from(selectedImages) as Id<"images">[] });
-    setSelectedImages(new Set());
-  }
+  console.log("Results:", results);
 
   const toggleSelection = (id: string) => {
     console.log("Toggling selection for:", id);
@@ -52,14 +44,20 @@ export default function ImagesPool() {
                   : "hover:border-gray-600"
               }`}
             >
-              <Image
-                alt={`img-${index}`}
-                layout="responsive"
-                width={500}
-                height={500}
-                objectFit="contain"
-                src={image.imageUrl ?? ""}
-              />
+              <video
+                loop
+                autoPlay
+                muted
+                style={{
+                  width: "500px",
+                  height: "500px",
+                  objectFit: "contain",
+                }}
+                controls
+              >
+                <source src={image.videoUrl ?? ""} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         ))}
@@ -67,27 +65,11 @@ export default function ImagesPool() {
       <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-2 pb-4">
         <Button
           variant="outline"
-          onClick={handleUnlinkUserFromImages}
-          disabled={selectedImages.size === 0}
-        >
-          Collect
-        </Button>
-
-        <Button
-          variant="outline"
           onClick={() => loadMore(30)}
           disabled={status !== "CanLoadMore"}
         >
           Load More
         </Button>
-
-        {/* <Button
-          variant="outline"
-          onClick={handleDeleteAndClear}
-          disabled={selectedImages.size === 0}
-        >
-          Delete
-        </Button> */}
       </div>
     </div>
   );

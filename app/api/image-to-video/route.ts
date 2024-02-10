@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/convex/_generated/api";
-import { fetchMutation } from "convex/nextjs";
+import { fetchAction } from "convex/nextjs";
 import { auth } from "@clerk/nextjs";
 
 // Clerk auth token for server-side requests
@@ -25,12 +25,10 @@ export async function POST(req: NextRequest) {
   const data = new FormData();
   data.append("image", file);
   data.append("seed", "0");
-  data.append("cfg_scale", "1.8");
-  data.append("motion_bucket_id", "127");
+  data.append("cfg_scale", "2");
+  data.append("motion_bucket_id", "255");
 
-  // generate video from image
-  // add convex action to schedule polling for video generation completion
-  // and store the video on convex, and add to videos table linked to user
+  // generate video from image using stable diffusion api
   const response = await fetch(
     "https://api.stability.ai/v2alpha/generation/image-to-video",
     {
@@ -44,11 +42,18 @@ export async function POST(req: NextRequest) {
 
   const responseJson = (await response.json()) as GenerationResponse;
   console.log("Generation ID:", responseJson.id);
-  console.log("Generation ID:", responseJson);
+  const videoId = responseJson.id;
 
-  // schedule an action
+  // pass videoId to convex to poll for completion, then store video
+  await fetchAction(
+    api.videos.storeVideo,
+    {
+      videoId,
+    },
+    { token },
+  );
 
-  return new NextResponse(JSON.stringify({ videoId: responseJson.id }), {
+  return new NextResponse(JSON.stringify({ videoId: videoId }), {
     status: 200,
     headers: {
       "Content-Type": "application/json",

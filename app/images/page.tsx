@@ -8,6 +8,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { ListChecks } from "lucide-react";
+import { set } from "react-hook-form";
 
 export default function Images() {
   const { isAuthenticated } = useConvexAuth();
@@ -62,77 +63,42 @@ export default function Images() {
 
   const handleImageToVideo = async () => {
     setIsLoading(true);
+    console.log("Image to Video");
+    const selectedImageUrls = results
+      .filter((image) => selectedImages.has(image._id))
+      .map((image) => image.imageUrl);
+
+    setSelectedImages(new Set());
     try {
-      console.log("Image to Video");
-      const selectedImageUrls = results
-        .filter((image) => selectedImages.has(image._id))
-        .map((image) => image.imageUrl);
+      // Map each imageUrl to a promise that performs the resize and fetch operation
+      const videoGenerationPromises = selectedImageUrls.map(
+        async (imageUrl) => {
+          // stable diffusion api requires specific image size
+          const resizedImageFile = await resizeImageTo768x768(imageUrl!);
 
-      const imageUrl = selectedImageUrls[0];
-      console.log(imageUrl);
+          const formData = new FormData();
+          formData.append("file", resizedImageFile);
 
-      // stable diffusion api requires specific image size
-      const resizedImageFile = await resizeImageTo768x768(imageUrl!);
+          // generate video from image using stable diffusion api
+          const response = await fetch("/api/image-to-video", {
+            method: "POST",
+            body: formData,
+          });
 
-      //   // Fetch the image data from the URL
-      //   const imageResponse = await fetch(imageUrl!);
-      //   const imageBlob = await imageResponse.blob();
-      //   const imageFile = new File([imageBlob], "image.jpg", {
-      //     type: "image/jpeg",
-      //   });
+          const { id } = await response.json();
+          console.log(id);
+          return id;
+        },
+      );
 
-      const formData = new FormData();
-      formData.append("file", resizedImageFile);
-
-      // generate video from image using stable diffusion api
-      const response = await fetch("/api/image-to-video", {
-        method: "POST",
-        body: formData,
-      });
-
-      // probably wont return data
-      // store video on convex, with video to user table, then display videos on another page
-      const { id } = await response.json();
-      console.log(id);
+      const videoIds = Promise.all(videoGenerationPromises);
+      console.log(videoIds);
     } catch (error) {
       console.error("Failed to fetch image:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const [videoUrl, setVideoUrl] = useState("");
-  const generateUploadUrl = useMutation(api.images.generateUploadUrl);
-
-  // test fetch video from stability ai using id
-  // move this to an scheduled convext action to poll for completion
-  const handleFetchVideo = async () => {
-    const url = `https://api.stability.ai/v2alpha/generation/image-to-video/result/${process.env.NEXT_PUBLIC_STABLE_DIFFUSION_VIDEO_ID}`;
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        Accept: "video/*",
-        Authorization: `Bearer sk-`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    // Get the video data
-    const data = await response.arrayBuffer();
-    const blob = new Blob([data], { type: "video/mp4" });
-
-    // Generate convex upload URL
-    const postUrl = await generateUploadUrl();
-    // upload to convex
-    await uploadVideo(blob, postUrl);
-    const videoUrl = URL.createObjectURL(blob);
-    setVideoUrl(videoUrl);
-    console.log(videoUrl);
-  };
-
   return (
     <div className="mx-3 mb-3 flex flex-col items-center justify-center">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -162,11 +128,6 @@ export default function Images() {
         ))}
       </div>
 
-      {videoUrl && (
-        <video src={videoUrl} controls width="640" autoPlay loop>
-          Your browser does not support the video tag.
-        </video>
-      )}
       <div className="fixed bottom-0 left-0 right-0 flex justify-center space-x-2 pb-4">
         <Button
           variant="outline"
@@ -194,19 +155,11 @@ export default function Images() {
 
         <Button
           variant="outline"
-          onClick={handleFetchVideo}
-          disabled={selectedImages.size === 0}
-        >
-          Get Video
-        </Button>
-
-        {/* <Button
-          variant="outline"
           onClick={handleDeleteAndClear}
           disabled={selectedImages.size === 0}
         >
           Delete
-        </Button> */}
+        </Button>
 
         <Toggle
           variant="outline"

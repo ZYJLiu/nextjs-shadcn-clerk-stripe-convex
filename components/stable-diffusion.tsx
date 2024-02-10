@@ -1,16 +1,11 @@
 "use client";
-
 import { Button } from "@/components/ui/button";
 import { useConvexAuth } from "convex/react";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { image } from "@/lib/image";
-import { useAction } from "convex/react";
-import { api } from "@/convex/_generated/api";
 
 export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
-  const generateImage = useAction(api.stablediffusion.generateImage);
-
   const { isAuthenticated } = useConvexAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [images, setImages] = useState([image]);
@@ -32,15 +27,6 @@ export function StableDiffusion({ imageSrc }: { imageSrc: string }) {
       console.log(imageData);
 
       setImages(imageData);
-
-      // const arrayBuffer = await convertBlobToArrayBuffer(imageFile);
-      // console.log("Array buffer:", arrayBuffer);
-      // const base64 = (await getBase64(imageFile)) as string;
-      // console.log("Base64:", base64);
-
-      // const images = await generateImage({ base64Image: base64 });
-      // console.log("Images:", images);
-      // setImages(images);
     } catch (error) {
       console.error("Failed to fetch image:", error);
     } finally {

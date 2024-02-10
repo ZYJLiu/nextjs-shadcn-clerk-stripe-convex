@@ -20,4 +20,10 @@ export default defineSchema({
     storageId: v.id("_storage"),
     imageUrl: v.optional(v.string()),
   }).index("by_user", ["user"]),
+
+  videos: defineTable({
+    user: v.optional(v.id("users")),
+    storageId: v.id("_storage"),
+    videoUrl: v.optional(v.string()),
+  }).index("by_user", ["user"]),
 });
