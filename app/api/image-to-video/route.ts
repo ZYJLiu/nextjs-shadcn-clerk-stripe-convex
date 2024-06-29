@@ -4,7 +4,7 @@ import { fetchAction } from "convex/nextjs";
 import { auth } from "@clerk/nextjs";
 
 // Clerk auth token for server-side requests
-export async function getAuthToken() {
+async function getAuthToken() {
   return (await auth().getToken({ template: "convex" })) ?? undefined;
 }
 

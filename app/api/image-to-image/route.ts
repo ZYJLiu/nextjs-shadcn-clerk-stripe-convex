@@ -4,7 +4,7 @@ import { fetchMutation } from "convex/nextjs";
 import { auth } from "@clerk/nextjs";
 
 // Clerk auth token for server-side requests
-export async function getAuthToken() {
+async function getAuthToken() {
   return (await auth().getToken({ template: "convex" })) ?? undefined;
 }
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // formData.append("height", "1024");
   formData.append("seed", "0");
   formData.append("cfg_scale", "20");
-  formData.append("samples", "10");
+  formData.append("samples", "1");
   // formData.append("style_preset", "anime");
   formData.append(
     "text_prompts[0][text]",
